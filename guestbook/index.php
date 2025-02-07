@@ -1,39 +1,45 @@
 <?php
+// Имя файла, в котором хранятся сообщения
 $data_file = 'data.txt';
 
+// Функция загрузки сообщений из файла
 function load_messages($file) {
-    $messages = [];
-    if (file_exists($file)) {
-        $lines = file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        foreach ($lines as $line) {
-            list($name, $email, $timestamp, $message) = explode('|', $line);
-            $message = str_replace('[NEWLINE]', "\n", $message);
-            $messages[] = [
+    $messages = []; // Создаем пустой массив для хранения сообщений
+    if (file_exists($file)) { // Проверяем, существует ли файл
+        $lines = file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES); // Читаем файл построчно, игнорируя пустые строки
+        foreach ($lines as $line) { // Перебираем каждую строку
+            list($name, $email, $timestamp, $message) = explode('|', $line); // Разбиваем строку по разделителю "|"
+            $message = str_replace('[NEWLINE]', "\n", $message); // Восстанавливаем переводы строк
+            $messages[] = [ // Добавляем сообщение в массив
                 'name' => $name,
                 'email' => $email,
                 'timestamp' => $timestamp,
-                'message' => nl2br(htmlspecialchars($message))
+                'message' => nl2br(htmlspecialchars($message)) // Преобразуем символы в HTML-сущности и добавляем переносы строк
             ];
         }
     }
-    return array_reverse($messages);
+    return array_reverse($messages); // Возвращаем сообщения в обратном порядке (от новых к старым)
 }
 
+// Проверяем, был ли запрос методом POST (форма отправлена)
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $name = trim($_POST['name']);
-    $email = trim($_POST['email']);
-    $message = trim($_POST['message']);
-    
+    $name = trim($_POST['name']); // Очищаем имя от лишних пробелов
+    $email = trim($_POST['email']); // Очищаем email от лишних пробелов
+    $message = trim($_POST['message']); // Очищаем сообщение от лишних пробелов
+
+    // Проверяем, что все поля заполнены
     if (!empty($name) && !empty($email) && !empty($message)) {
-        $timestamp = date('Y-m-d H:i:s');
-        $message = str_replace("\n", '[NEWLINE]', $message); 
-        $entry = "$name|$email|$timestamp|$message\n";
-        file_put_contents($data_file, $entry, FILE_APPEND);
-        header('Location: index.php');
-        exit;
+        $timestamp = date('Y-m-d H:i:s'); // Получаем текущую дату и время
+        $message = str_replace("\n", '[NEWLINE]', $message); // Заменяем переводы строк на специальный маркер
+        $entry = "$name|$email|$timestamp|$message\n"; // Формируем строку для записи в файл
+        file_put_contents($data_file, $entry, FILE_APPEND); // Добавляем строку в файл
+
+        header('Location: index.php'); // Перенаправляем пользователя на главную страницу
+        exit; // Прекращаем выполнение скрипта
     }
 }
 
+// Загружаем сообщения из файла
 $messages = load_messages($data_file);
 ?>
 
